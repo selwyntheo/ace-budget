@@ -67,7 +67,7 @@ const FundSelection: React.FC = () => {
     <div className="fund-selection">
       <div className="fund-selection__header">
         <h1>Select a Model Fund</h1>
-        <p>Choose a model fund that aligns with your investment goals and risk tolerance.</p>
+        <p>Choose a model fund to project the budget for the new fund.</p>
       </div>
 
       <div className="fund-selection__controls">
