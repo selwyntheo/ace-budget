@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Navigation from './components/Navigation';
 import FundSelection from './pages/FundSelection';
-import BudgetProjection from './pages/BudgetProjection';
+import BudgetProjection from './pages/BudgetProjectionNew';
 import Review from './pages/Review';
 import './App.css';
 

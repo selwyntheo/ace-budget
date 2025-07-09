@@ -24,25 +24,26 @@ const Review: React.FC = () => {
     setTimeout(() => {
       const generateRecommendations = (): string[] => {
         const recommendations: string[] = [];
+        const ter = state.projection!.expectedReturn;
         
-        if (state.projection!.expectedReturn > 8) {
-          recommendations.push("Your projected returns look strong based on the selected model fund.");
+        if (ter < 1.0) {
+          recommendations.push("The Total Expense Ratio is relatively low, which may provide cost-effective fund management.");
         }
         
-        if (state.budgetInputs!.monthlyContribution > 1000) {
-          recommendations.push("Your monthly contributions are substantial. Consider maximizing tax-advantaged accounts.");
+        if (state.budgetInputs!.initialInvestment > 10000000) {
+          recommendations.push("With substantial estimated assets, consider implementing enhanced risk monitoring and diversification strategies.");
         }
         
-        if (state.budgetInputs!.timeHorizon > 15) {
-          recommendations.push("With your long investment horizon, you can benefit from compound growth.");
+        if (state.budgetInputs!.timeHorizon > 1) {
+          recommendations.push("With a longer time horizon, the fund can benefit from strategic asset allocation and rebalancing.");
         }
         
-        if (state.budgetInputs!.riskTolerance === 'Conservative' && state.selectedModelFund!.riskLevel === 'High') {
-          recommendations.push("Consider reviewing the risk alignment between your tolerance and selected fund.");
+        if (state.selectedModelFund!.riskLevel === 'Low') {
+          recommendations.push("The selected model fund has a conservative risk profile, suitable for stable returns.");
         }
         
-        if (state.budgetInputs!.additionalParameters?.emergencyFund && state.budgetInputs!.additionalParameters.emergencyFund < state.budgetInputs!.monthlyContribution * 3) {
-          recommendations.push("Consider building a larger emergency fund before increasing investments.");
+        if (state.selectedModelFund!.managementFee < 1.0) {
+          recommendations.push("The model fund has competitive management fees, which should support overall fund performance.");
         }
         
         return recommendations;
@@ -50,21 +51,26 @@ const Review: React.FC = () => {
 
       const generateWarnings = (): string[] => {
         const warnings: string[] = [];
+        const ter = state.projection!.expectedReturn;
         
-        if (state.projection!.expectedReturn < 3) {
-          warnings.push("Low expected returns may not keep pace with inflation. Consider adjusting your strategy.");
+        if (ter > 2.0) {
+          warnings.push("The Total Expense Ratio is relatively high. Consider reviewing the fee structure and cost efficiency.");
         }
         
-        if (state.budgetInputs!.initialInvestment < state.selectedModelFund!.minimumInvestment * 2) {
-          warnings.push("Your initial investment is close to the minimum. Consider starting with a larger amount if possible.");
+        if (state.budgetInputs!.initialInvestment < state.selectedModelFund!.minimumInvestment * 1.5) {
+          warnings.push("Estimated assets are close to the minimum investment threshold. Consider increasing the initial funding.");
         }
         
-        if (state.budgetInputs!.additionalParameters?.taxRate && state.budgetInputs!.additionalParameters.taxRate > 30) {
-          warnings.push("High tax rates significantly impact returns. Consider tax-efficient investment strategies.");
+        if (state.budgetInputs!.timeHorizon < 0.25) {
+          warnings.push("Very short time horizon may limit the fund's ability to implement optimal investment strategies.");
         }
         
-        if (state.selectedModelFund!.riskLevel === 'High' && state.budgetInputs!.timeHorizon < 5) {
-          warnings.push("High-risk investments may not be suitable for shorter time horizons.");
+        if (state.selectedModelFund!.riskLevel === 'High' && state.budgetInputs!.timeHorizon < 1) {
+          warnings.push("High-risk model fund may not be suitable for short-term investment horizons.");
+        }
+        
+        if (state.selectedModelFund!.managementFee > 2.0) {
+          warnings.push("High management fees may impact overall fund performance. Consider fee optimization strategies.");
         }
         
         return warnings;
@@ -173,60 +179,52 @@ const Review: React.FC = () => {
         </div>
 
         <div className="review__section">
-          <h2>Investment Parameters</h2>
+          <h2>New Fund Parameters</h2>
           <div className="parameters-grid">
             <div className="parameter">
-              <span className="parameter__label">Initial Investment:</span>
+              <span className="parameter__label">Estimated Assets:</span>
               <span className="parameter__value">${reviewSummary.budgetInputs.initialInvestment.toLocaleString()}</span>
             </div>
             <div className="parameter">
-              <span className="parameter__label">Monthly Contribution:</span>
-              <span className="parameter__value">${reviewSummary.budgetInputs.monthlyContribution.toLocaleString()}</span>
-            </div>
-            <div className="parameter">
               <span className="parameter__label">Time Horizon:</span>
-              <span className="parameter__value">{reviewSummary.budgetInputs.timeHorizon} years</span>
+              <span className="parameter__value">{Math.round(reviewSummary.budgetInputs.timeHorizon * 365)} days</span>
             </div>
             <div className="parameter">
-              <span className="parameter__label">Risk Tolerance:</span>
+              <span className="parameter__label">Risk Assessment:</span>
               <span className="parameter__value">{reviewSummary.budgetInputs.riskTolerance}</span>
             </div>
             <div className="parameter">
-              <span className="parameter__label">Inflation Rate:</span>
-              <span className="parameter__value">{reviewSummary.budgetInputs.additionalParameters?.inflationRate}%</span>
-            </div>
-            <div className="parameter">
-              <span className="parameter__label">Tax Rate:</span>
-              <span className="parameter__value">{reviewSummary.budgetInputs.additionalParameters?.taxRate}%</span>
+              <span className="parameter__label">Model Fund TER:</span>
+              <span className="parameter__value">{reviewSummary.projection.expectedReturn.toFixed(4)}%</span>
             </div>
           </div>
         </div>
 
         <div className="review__section">
-          <h2>Projection Results</h2>
+          <h2>Budget Projection Results</h2>
           <div className="projection-results">
             <div className="result-card result-card--primary">
-              <h3>Projected Value</h3>
+              <h3>Estimated Fund Value</h3>
               <div className="result-value">
                 ${reviewSummary.projection.projectedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
             </div>
             <div className="result-card">
-              <h3>Total Contributions</h3>
+              <h3>Initial Assets</h3>
               <div className="result-value">
                 ${reviewSummary.projection.totalContributions.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
             </div>
             <div className="result-card">
-              <h3>Total Growth</h3>
+              <h3>Estimated TER Impact</h3>
               <div className="result-value">
                 ${reviewSummary.projection.totalGrowth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
             </div>
             <div className="result-card">
-              <h3>Expected Return</h3>
+              <h3>Total Expense Ratio</h3>
               <div className="result-value">
-                {reviewSummary.projection.expectedReturn.toFixed(1)}%
+                {reviewSummary.projection.expectedReturn.toFixed(4)}%
               </div>
             </div>
           </div>
@@ -263,9 +261,10 @@ const Review: React.FC = () => {
         <div className="review__disclaimer">
           <h3>Important Disclaimer</h3>
           <p>
-            This projection is based on historical data and assumptions. Past performance does not guarantee future results. 
-            Investment values may fluctuate and you may receive back less than you invested. Please consult with a qualified 
-            financial advisor before making investment decisions.
+            This budget projection is based on model fund data and assumptions about fee structures and market conditions. 
+            Actual results may vary significantly due to market volatility, changes in fee structures, regulatory changes, 
+            and other factors. This analysis is for informational purposes only and should not be considered as investment 
+            advice. Please consult with qualified financial professionals before making fund management decisions.
           </p>
         </div>
       </div>

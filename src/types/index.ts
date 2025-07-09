@@ -2,9 +2,20 @@
 
 export interface ModelFund {
   id: string;
+  fundNumber: string;
   name: string;
+  fundShareclass: string;
   description: string;
   category: string;
+  unitsOutstanding: number;
+  validationPeriodEndDate: string;
+  shareholderEquity: number;
+  assetsAfterCapitalChange: number;
+  fiscalYearEndMonth: number;
+  fiscalYearEndDay: number;
+  nav: number; // 8 precision
+  allocationRatioMcsOpt: number;
+  fundBaseCurrency: string;
   performanceHistory: PerformanceData[];
   riskLevel: 'Low' | 'Medium' | 'High';
   minimumInvestment: number;
@@ -54,4 +65,36 @@ export interface AppState {
   budgetInputs: BudgetInputs | null;
   projection: BudgetProjectionData | null;
   reviewSummary: ReviewSummary | null;
+}
+
+export interface SecurityEntry {
+  id: string;
+  fund: string;
+  securityUniqueQualifier: string;
+  securityDescription: string;
+  assetGroup: string;
+  feeType: 'Include' | 'Exclude';
+  modelFundCurrentRunRate: number;
+  weightedToNewFundProjectionRunRate: number;
+  annual: number;
+  estimateTER: number;
+  clientEstimate: number;
+  dailyRunRate: number;
+  logicApplied: string;
+  estimatedTER: number;
+}
+
+export interface NewFundInputs {
+  newFundNumber: string;
+  newFundEstimatedAssets: number;
+  newFundBaseCCY: string;
+  launchDate: string;
+  fye: string;
+  dayCountRemaining: number;
+}
+
+export interface BudgetProjectionTableData {
+  newFundInputs: NewFundInputs;
+  securities: SecurityEntry[];
+  selectedModelFund: ModelFund;
 }

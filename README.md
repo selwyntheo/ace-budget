@@ -15,17 +15,27 @@ A modern React TypeScript application for creating new investment funds based on
   - Minimum investment requirements
 
 ### 📊 Budget Projection
-- Interactive budget planning based on selected model fund
-- Customizable investment parameters:
-  - Initial investment amount
-  - Monthly contribution plans
-  - Investment time horizon
-  - Risk tolerance settings
-- Advanced parameters:
-  - Inflation rate adjustments
-  - Tax rate considerations
-  - Emergency fund planning
-- Real-time projection calculations with visual feedback
+- **React Data Grid Integration**: Professional tabular data management with advanced features
+- **Color-Coded Analytics**: Visual indicators for key financial metrics:
+  - 🟢 **Green**: Optimal/Good range values
+  - 🟡 **Yellow**: Moderate/Attention needed
+  - 🔴 **Red**: Concerning/Requires review
+- **Editable Securities Table** with columns:
+  - Fund, Security Unique Qualifier, Security Description
+  - Asset Group, Fee Type (Include/Exclude)
+  - Model Fund Current Run Rate
+  - **Weighted to New Fund - Projection Run Rate Estimates** (Color-coded)
+  - **Annual** values (Color-coded)
+  - **Estimate TER** (Total Expense Ratio - Color-coded)
+  - Client Review columns with estimates and logic
+- **New Fund Parameter Configuration**:
+  - New Fund Number and Estimated Assets
+  - Base Currency selection (USD, EUR, GBP, JPY, CAD)
+  - Launch Date and Fiscal Year End (FYE)
+  - Day Count Remaining calculations
+- **Real-time TER Calculations** with automated totaling
+- **Sortable and Resizable Columns** with frozen key columns
+- **Interactive Editing** with dropdown selections and numeric inputs
 
 ### 📋 Review & Analysis
 - Comprehensive investment summary
@@ -40,6 +50,7 @@ A modern React TypeScript application for creating new investment funds based on
 - **Build Tool**: Vite
 - **Routing**: React Router DOM
 - **State Management**: React Context API with useReducer
+- **Data Grid**: React Data Grid for advanced table functionality
 - **Styling**: CSS Modules with modern responsive design
 - **Development**: ESLint, TypeScript strict mode
 
