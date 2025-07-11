@@ -98,3 +98,30 @@ export interface BudgetProjectionTableData {
   securities: SecurityEntry[];
   selectedModelFund: ModelFund;
 }
+
+// Trial Balance data types
+export interface TrialBalanceEntry {
+  id: string;
+  accountNumber: string;
+  accountName: string;
+  classOfShares: string; // Expense
+  securityUniqueQual: string;
+  securityDistribution: string; // Long 1
+  positionDate: string;
+  assetGroup: string;
+  accruedIncomeGrossBase: number;
+  accruedIncomeGross: number;
+  incomeEarnedBase: number;
+  earnedIncomeLocal: number;
+  accountBaseCurrency: string;
+  ana: number; // Calculated field from Model Fund Asset After Capital Change
+  annualFee: number; // Calculated field from Income Earned * 365
+  rate: number; // Calculated field from Annual Rate/ANA
+}
+
+export interface TrialBalanceData {
+  entries: TrialBalanceEntry[];
+  totalANA: number;
+  totalAnnualFee: number;
+  averageRate: number;
+}

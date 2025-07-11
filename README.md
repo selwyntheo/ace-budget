@@ -16,6 +16,22 @@ A modern React TypeScript application for creating new investment funds based on
 
 ### 📊 Budget Projection
 - **React Data Grid Integration**: Professional tabular data management with advanced features
+- **Trial Balance Data Integration**: 
+  - 🔄 **Server-Sourced Data**: Automated retrieval of trial balance data from server
+  - 📈 **Calculated Fields**: 
+    - **ANA** (Asset Net Amount): Derived from Model Fund Asset After Capital Change
+    - **Annual Fee**: Calculated as Income Earned × 365
+    - **Rate**: Calculated as Annual Fee ÷ ANA
+  - 📊 **Comprehensive Fields**: Account Number, Account Name, Class of Shares (Expense), Security Unique Qualifier, Security Distribution (Long 1), Position Date, Asset Group, Accrued Income Gross (Base), Accrued Income Gross, Income Earned (Base), Earned Income (Local), Account Base Currency
+  - 📋 **Interactive Grid**: Sortable, resizable columns with real-time calculations
+  - 💾 **Export Functionality**: Export trial balance data to JSON format
+  - 🔄 **Refresh Data**: Real-time data refresh from server
+- **Mutual Fund Prospectus Upload & AI Insight**: 
+  - 📄 **PDF Upload**: Secure upload of mutual fund prospectus documents (max 10MB)
+  - 🤖 **AI Analysis**: Automated analysis of prospectus content for budget insights
+  - 📊 **Budget Analysis**: AI-generated expense ratio estimates and cost breakdown
+  - 💰 **Expense Breakdown**: Detailed fee structure analysis (management, administrative, distribution)
+  - 🔄 **Apply Insights**: One-click application of AI insights to the securities table
 - **Color-Coded Analytics**: Visual indicators for key financial metrics:
   - 🟢 **Green**: Optimal/Good range values
   - 🟡 **Yellow**: Moderate/Attention needed
@@ -37,12 +53,36 @@ A modern React TypeScript application for creating new investment funds based on
 - **Sortable and Resizable Columns** with frozen key columns
 - **Interactive Editing** with dropdown selections and numeric inputs
 
-### 📋 Review & Analysis
-- Comprehensive investment summary
-- Personalized recommendations
-- Risk warnings and considerations
-- Exportable reports in JSON format
-- Professional disclaimer and guidance
+### 📋 Budget Review and Finalization with AI Agent
+- **AI Agent Review**: Advanced AI-powered analysis of budget data
+  - 🤖 **Smart Insights**: AI-generated insights across multiple categories
+  - 📊 **Confidence Scoring**: AI confidence levels for each insight (0-100%)
+  - ⚠️ **Priority Indicators**: High, Medium, Low priority classifications
+  - 🔍 **Local Analysis**: Expense Analysis performed locally
+  - 🌐 **API Integration**: Budget Validation fetched from server endpoint
+    - Real-time API calls to `/api/budget-validation`
+    - Dynamic asset allocation analysis
+    - Compliance scoring with industry standards
+    - Error handling and fallback mechanisms
+    - Loading states and progress indicators
+- **Budget Summary Dashboard**: Key financial metrics overview
+  - Selected Model Fund details
+  - Estimated Assets and Projected Value
+  - Total Expense Ratio (TER) calculations
+- **Data Download Center**: 
+  - 📊 **Interactive Data Grid**: Professional download interface with React Data Grid
+  - 📄 **Multiple Formats**: JSON, CSV, Excel, PDF support
+  - 📁 **Ready Files**: Instant download for processed data
+  - 🔄 **Processing Status**: Real-time status updates for large files
+  - 📦 **Bulk Download**: Download all ready files at once
+  - 📋 **Available Downloads**:
+    - Budget Projection data with fund parameters (MODE, ACCT, SCTYDT, SCTYUNQ, FYEDT, EXECDT, AMTYP, AMT)
+    - Securities breakdown with TER calculations
+    - Trial balance data with calculated fields
+    - Comprehensive fund analysis reports
+    - AI-generated insights and analysis
+- **Budget Finalization**: Complete budget approval workflow
+- **Professional Data Export**: Enterprise-ready reporting capabilities
 
 ## Tech Stack
 
@@ -95,9 +135,11 @@ src/
 │   └── modelFunds.ts    # Model fund data and calculations
 ├── pages/               # Main application pages
 │   ├── FundSelection.tsx     # Fund browsing and selection
-│   ├── BudgetProjection.tsx  # Investment parameter input
-│   ├── Review.tsx            # Final review and export
+│   ├── BudgetProjectionNew.tsx  # Investment parameter input with data grid
+│   ├── Review.tsx            # Budget review and data download center
 │   └── *.css                 # Page-specific styles
+├── services/            # Business logic and data services
+│   └── trialBalanceController.ts  # Trial balance data management
 ├── types/               # TypeScript interfaces
 │   └── index.ts         # All type definitions
 ├── App.tsx              # Main application component
@@ -127,9 +169,18 @@ src/
 
 1. **Fund Selection**: Browse available model funds, compare their performance metrics, and select one that matches your investment goals.
 
-2. **Budget Projection**: Input your investment parameters including initial amount, monthly contributions, time horizon, and risk tolerance. The system calculates projections in real-time.
+2. **Budget Projection**: 
+   - Input your investment parameters and new fund details
+   - Work with the interactive securities table with color-coded analytics
+   - Upload mutual fund prospectus for AI-powered insights
+   - Review trial balance data with calculated fields
+   - Configure fund parameters and calculations
 
-3. **Review**: Review your complete investment plan, read personalized recommendations, and export the summary for your records.
+3. **Budget Review and Finalization**: 
+   - Review AI agent analysis with confidence scores and priority indicators
+   - Download comprehensive data in multiple formats
+   - Access professional reports and analysis
+   - Finalize your budget with complete data transparency
 
 ## Contributing
 

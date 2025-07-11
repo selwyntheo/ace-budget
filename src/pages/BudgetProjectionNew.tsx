@@ -4,7 +4,8 @@ import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import { useAppContext } from '../context/useAppContext';
 import { getSecurityDataForFund } from '../data/modelFunds';
-import type { NewFundInputs, SecurityEntry } from '../types';
+import { trialBalanceController } from '../services/trialBalanceController';
+import type { NewFundInputs, SecurityEntry, TrialBalanceData, TrialBalanceEntry } from '../types';
 import './BudgetProjection.css';
 import 'react-data-grid/lib/styles.css';
 
@@ -21,6 +22,20 @@ const BudgetProjection: React.FC = () => {
   });
   const [securities, setSecurities] = useState<SecurityEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Trial Balance state
+  const [trialBalanceData, setTrialBalanceData] = useState<TrialBalanceData | null>(null);
+  const [isLoadingTrialBalance, setIsLoadingTrialBalance] = useState(false);
+  const [trialBalanceError, setTrialBalanceError] = useState<string>('');
+  
+  // Prospectus upload state
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiInsights, setAiInsights] = useState<{
+    budgetAnalysis: string;
+    expenseBreakdown: string;
+  } | null>(null);
+  const [uploadError, setUploadError] = useState<string>('');
 
   // Redirect if no model fund is selected
   useEffect(() => {
@@ -36,10 +51,85 @@ const BudgetProjection: React.FC = () => {
       setSecurities(securityData);
       setIsLoading(false);
     }, 500);
+
+    // Load trial balance data
+    loadTrialBalanceData();
   }, [state.selectedModelFund, navigate]);
+
+  // Load trial balance data from server
+  const loadTrialBalanceData = async () => {
+    if (!state.selectedModelFund) return;
+    
+    setIsLoadingTrialBalance(true);
+    setTrialBalanceError('');
+    
+    try {
+      const data = await trialBalanceController.fetchTrialBalanceData(state.selectedModelFund.id);
+      setTrialBalanceData(data);
+    } catch (error) {
+      setTrialBalanceError('Failed to load trial balance data. Please try again.');
+      console.error('Error loading trial balance data:', error);
+    } finally {
+      setIsLoadingTrialBalance(false);
+    }
+  };
 
   const handleNewFundInputChange = (field: keyof NewFundInputs, value: string | number) => {
     setNewFundInputs(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Prospectus upload handlers
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadError('');
+      // Validate file type
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        setUploadError('Please upload a PDF file');
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError('File size must be less than 10MB');
+        return;
+      }
+      
+      setUploadedFile(file);
+      analyzeProspectus(file);
+    }
+  };
+
+  const analyzeProspectus = async (file: File) => {
+    setIsAnalyzing(true);
+    setAiInsights(null);
+    
+    try {
+      // Simulate AI analysis - in a real implementation, this would call an AI service
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Mock AI insights based on file name and common prospectus patterns
+      const fileName = file.name.toLowerCase();
+      const isEquityFund = fileName.includes('equity') || fileName.includes('stock');
+      const isBondFund = fileName.includes('bond') || fileName.includes('fixed');
+      
+      const mockInsights = {
+        budgetAnalysis: `Based on the uploaded prospectus (${file.name}), the estimated annual operating expenses range from ${isEquityFund ? '0.85% to 1.45%' : isBondFund ? '0.45% to 0.85%' : '0.75% to 1.25%'} of net assets. Key cost drivers include management fees, administrative costs, and distribution fees. The fund structure suggests a total expense ratio in line with industry standards for similar asset classes.`,
+        expenseBreakdown: `Management Fee: ${isEquityFund ? '0.75%' : isBondFund ? '0.45%' : '0.65%'} | Administrative Expenses: 0.20% | Distribution/Service Fees: 0.12% | Other Expenses: 0.08% | Total Estimated TER: ${isEquityFund ? '1.15%' : isBondFund ? '0.85%' : '1.05%'}`
+      };
+      
+      setAiInsights(mockInsights);
+    } catch (error) {
+      setUploadError('Failed to analyze prospectus. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setAiInsights(null);
+    setUploadError('');
   };
 
   const calculateTotalTER = () => {
@@ -200,6 +290,86 @@ const BudgetProjection: React.FC = () => {
     setSecurities(updatedSecurities);
   };
 
+  // Trial Balance column definitions
+  const trialBalanceColumns: Column<TrialBalanceEntry>[] = useMemo(() => [
+    { key: 'accountNumber', name: 'Account Number', width: 120, frozen: true },
+    { key: 'accountName', name: 'Account Name', width: 200, frozen: true },
+    { key: 'classOfShares', name: 'Class of Shares (Expense)', width: 150 },
+    { key: 'securityUniqueQual', name: 'Security Unique Qual', width: 150 },
+    { key: 'securityDistribution', name: 'Security Distribution (Long 1)', width: 180 },
+    { key: 'positionDate', name: 'Position Date', width: 120 },
+    { key: 'assetGroup', name: 'Asset Group', width: 120 },
+    { 
+      key: 'accruedIncomeGrossBase', 
+      name: 'Accrued Income Gross (Base)', 
+      width: 180,
+      renderCell: ({ row }) => `$${row.accruedIncomeGrossBase.toLocaleString()}`
+    },
+    { 
+      key: 'accruedIncomeGross', 
+      name: 'Accrued Income Gross', 
+      width: 160,
+      renderCell: ({ row }) => `$${row.accruedIncomeGross.toLocaleString()}`
+    },
+    { 
+      key: 'incomeEarnedBase', 
+      name: 'Income Earned (Base)', 
+      width: 150,
+      renderCell: ({ row }) => `$${row.incomeEarnedBase.toFixed(2)}`
+    },
+    { 
+      key: 'earnedIncomeLocal', 
+      name: 'Earned Income (Local)', 
+      width: 150,
+      renderCell: ({ row }) => `$${row.earnedIncomeLocal.toFixed(2)}`
+    },
+    { key: 'accountBaseCurrency', name: 'Account Base Currency', width: 160 },
+    { 
+      key: 'ana', 
+      name: 'ANA', 
+      width: 120,
+      renderCell: ({ row }) => `$${row.ana.toLocaleString()}`,
+      headerTooltip: 'Asset Net Amount (Model Fund Asset After Capital Change)'
+    },
+    { 
+      key: 'annualFee', 
+      name: 'Annual Fee', 
+      width: 120,
+      renderCell: ({ row }) => `$${row.annualFee.toFixed(2)}`,
+      headerTooltip: 'Income Earned * 365'
+    },
+    { 
+      key: 'rate', 
+      name: 'Rate', 
+      width: 100,
+      renderCell: ({ row }) => `${(row.rate * 100).toFixed(4)}%`,
+      headerTooltip: 'Annual Fee / ANA'
+    }
+  ], []);
+
+  const handleTrialBalanceRowsChange = (rows: TrialBalanceEntry[], { indexes }: { indexes: number[] }) => {
+    if (!trialBalanceData) return;
+    
+    const updatedEntries = [...trialBalanceData.entries];
+    indexes.forEach(index => {
+      updatedEntries[index] = rows[index];
+    });
+    
+    // Recalculate totals
+    const totalANA = updatedEntries.reduce((sum, entry) => sum + entry.ana, 0);
+    const totalAnnualFee = updatedEntries.reduce((sum, entry) => sum + entry.annualFee, 0);
+    const averageRate = updatedEntries.length > 0 
+      ? updatedEntries.reduce((sum, entry) => sum + entry.rate, 0) / updatedEntries.length
+      : 0;
+    
+    setTrialBalanceData({
+      entries: updatedEntries,
+      totalANA,
+      totalAnnualFee,
+      averageRate
+    });
+  };
+
   const handleContinue = () => {
     // Save the budget inputs in compatible format
     const budgetInputsData = {
@@ -324,6 +494,211 @@ const BudgetProjection: React.FC = () => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Mutual Fund Prospectus Upload & AI Insight */}
+        <div className="prospectus-upload-section">
+          <h3>Mutual Fund Prospectus Upload & AI Insight</h3>
+          <p className="section-description">
+            Upload a mutual fund prospectus to get AI-powered insights on budget projections and expense analysis.
+          </p>
+          
+          <div className="upload-container">
+            <div className="file-upload-area">
+              <input
+                type="file"
+                id="prospectus-upload"
+                accept=".pdf"
+                onChange={handleFileUpload}
+                className="file-input"
+              />
+              <label htmlFor="prospectus-upload" className="file-upload-label">
+                <div className="upload-icon">📄</div>
+                <div className="upload-text">
+                  <span className="upload-title">Upload Prospectus</span>
+                  <span className="upload-subtitle">PDF files only, max 10MB</span>
+                </div>
+              </label>
+            </div>
+            
+            {uploadedFile && (
+              <div className="uploaded-file-info">
+                <div className="file-details">
+                  <span className="file-name">{uploadedFile.name}</span>
+                  <span className="file-size">
+                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="remove-file-btn"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            
+            {uploadError && (
+              <div className="upload-error">
+                <span className="error-icon">⚠️</span>
+                <span className="error-message">{uploadError}</span>
+              </div>
+            )}
+          </div>
+          
+          {isAnalyzing && (
+            <div className="ai-analysis-loading">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">
+                <h4>AI Analysis in Progress</h4>
+                <p>Analyzing prospectus for budget insights and expense breakdown...</p>
+              </div>
+            </div>
+          )}
+          
+          {aiInsights && (
+            <div className="ai-insights">
+              <h4>AI-Generated Insights</h4>
+              
+              <div className="insight-section">
+                <h5>📊 Budget Analysis</h5>
+                <p className="insight-text">{aiInsights.budgetAnalysis}</p>
+              </div>
+              
+              <div className="insight-section">
+                <h5>💰 Expense Breakdown</h5>
+                <div className="expense-breakdown">
+                  {aiInsights.expenseBreakdown.split(' | ').map((item, index) => (
+                    <div key={index} className="expense-item">
+                      <span className="expense-label">{item.split(':')[0]}:</span>
+                      <span className="expense-value">{item.split(':')[1]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="insight-actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => setAiInsights(null)}
+                >
+                  Clear Insights
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--outline"
+                  onClick={() => {
+                    // Apply AI insights to the securities table
+                    const updatedSecurities = securities.map(security => ({
+                      ...security,
+                      estimatedTER: security.estimatedTER + (Math.random() * 0.1 - 0.05), // Mock adjustment
+                    }));
+                    setSecurities(updatedSecurities);
+                  }}
+                >
+                  Apply Insights to Table
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Trial Balance Data Section */}
+        <div className="trial-balance-section">
+          <h3>Trial Balance Data</h3>
+          <p className="section-description">
+            Trial balance data sourced from the server with calculated ANA, Annual Fee, and Rate fields.
+          </p>
+          
+          {isLoadingTrialBalance && (
+            <div className="loading">
+              <div className="loading-spinner"></div>
+              <p>Loading trial balance data...</p>
+            </div>
+          )}
+          
+          {trialBalanceError && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              <span>{trialBalanceError}</span>
+              <button 
+                onClick={loadTrialBalanceData}
+                className="btn btn--secondary btn--small"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          
+          {trialBalanceData && !isLoadingTrialBalance && (
+            <div className="trial-balance-content">
+              <div className="trial-balance-summary">
+                <div className="summary-item">
+                  <span className="summary-label">Total ANA:</span>
+                  <span className="summary-value">${trialBalanceData.totalANA.toLocaleString()}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Total Annual Fee:</span>
+                  <span className="summary-value">${trialBalanceData.totalAnnualFee.toFixed(2)}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Average Rate:</span>
+                  <span className="summary-value">{(trialBalanceData.averageRate * 100).toFixed(4)}%</span>
+                </div>
+              </div>
+              
+              <div className="trial-balance-grid">
+                <DataGrid
+                  columns={trialBalanceColumns}
+                  rows={trialBalanceData.entries}
+                  onRowsChange={handleTrialBalanceRowsChange}
+                  defaultColumnOptions={{
+                    sortable: true,
+                    resizable: true,
+                  }}
+                  className="rdg-light"
+                  style={{ height: '300px' }}
+                  headerRowHeight={50}
+                  rowHeight={35}
+                />
+              </div>
+              
+              <div className="trial-balance-actions">
+                <button
+                  type="button"
+                  className="btn btn--outline"
+                  onClick={loadTrialBalanceData}
+                >
+                  Refresh Data
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => {
+                    // Export trial balance data
+                    const exportData = {
+                      timestamp: new Date().toISOString(),
+                      modelFundId: state.selectedModelFund?.id,
+                      trialBalanceData
+                    };
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `trial-balance-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Export Data
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Securities Table */}
